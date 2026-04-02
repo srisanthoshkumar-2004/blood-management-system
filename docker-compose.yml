@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Local MySQL for Development
+  db:
+    image: mysql:8.0
+    container_name: bms-db
+    restart: always
+    profiles: ["dev"]
+    environment:
+      MYSQL_DATABASE: blood_management
+      MYSQL_ROOT_PASSWORD: dev_root_password
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bms-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # If using local DB (dev profile), these connect to the 'db' service.
+      # If using Aiven, these values are read from your .env file.
+      DB_URL: ${DB_URL:-jdbc:mysql://db:3306/blood_management?useSSL=false}
+      DB_USER: ${DB_USER:-root}
+      DB_PASS: ${DB_PASS:-dev_root_password}
+      JWT_SECRET: ${JWT_SECRET}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false # Don't fail if db is missing (e.g. when using Aiven)
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bms-frontend
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: ${BACKEND_URL:-http://localhost:8080}

@@ -1,0 +1,30 @@
+# Environment Variables
+.env
+*.env
+.env.*
+
+# Build artifacts
+target/
+dist/
+build/
+node_modules/
+*.jar
+*.war
+
+# IDE / Editor folders
+.vscode/
+.idea/
+.settings/
+.classpath
+.project
+.factorypath
+bin/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
